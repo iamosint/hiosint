@@ -64,6 +64,21 @@ def convert_snusbase_plaintext(data: dict) -> str:
     return result_str.strip()
 
 
+def convert_dehashed_plaintext(records: dict):
+    result_str = ""
+    if not records.get("total", -1) > 0:
+        return None
+    for entry in records.get("entries"):
+        result_str += "- " + entry.get("database_name") + "\n"
+        for key, value in entry.items():
+            if key == "database_name":
+                continue
+            if value:
+                result_str += f"-- {key.upper()}: {value}" + "\n"
+        result_str += "\n\n"
+    return result_str.strip()
+
+
 def convert_google_plaintext(urls: list[str]) -> str:
     result_str = ""
     for url in urls:
@@ -74,6 +89,7 @@ def convert_google_plaintext(urls: list[str]) -> str:
 RESULT_PROCESS_PLAINTEXT = {
     "leakcheck": convert_leakcheck_plaintext,
     "snusbase": convert_snusbase_plaintext,
+    "dehashed": convert_dehashed_plaintext,
     "google": convert_google_plaintext,
 }
 
@@ -89,9 +105,15 @@ def setup_keys(fp: Path):
         " We need some information from you first."
     )
     updated_keys = defaultdict(dict)
-    for service, key in (("snusbase", "activation_code"), ("leakcheck", "api_key")):
+    for service, key, comments in (
+        ("snusbase", "activation_code", None),
+        ("leakcheck", "api_key", None),
+        ("dehashed", "authorization", "email|api_key"),
+    ):
         if bool_question(
-            f"Do you have a {service.title()} {key.replace('_', ' ')}?"
+            f"Do you have a {service.title()} {key.replace('_', ' ')} ({comments})?"
+            if comments
+            else f"Do you have a {service.title()} {key.replace('_', ' ')}?"
             f" [{Fore.GREEN}y{Fore.RESET}/{Fore.RED}n{Fore.RESET}] -> "
         ):
             answer = input("What is it? -> ")
@@ -135,6 +157,7 @@ async def maincore():
                 print(plaintext)
         else:
             print(results)
+    print("- " + Fore.GREEN + "Finished all operations.")
 
 
 def main():
