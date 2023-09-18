@@ -6,7 +6,7 @@ long_desc = (Path(__file__).parent / "README.md").read_text()
 
 setup(
     name="hiosint",
-    version="1.0",
+    version="1.1",
     packages=find_packages(),
     author="iamosint",
     author_email="osint@iamosint.33mail.com",
