@@ -15,7 +15,7 @@ Install hiosint from source
 ```bash
 git clone https://github.com/iamosint/hiosint.git
 cd hiosint/
-python3 setup.py install
+pip install .
 ```
 ## Usage
 
