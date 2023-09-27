@@ -86,11 +86,19 @@ def convert_google_plaintext(urls: list[str]) -> str:
     return result_str.strip()
 
 
+def convert_duckduckgo_plaintext(urls: list[str]) -> str:
+    result_str = ""
+    for url in urls:
+        result_str += "- " + url + "\n"
+    return result_str.strip()
+
+
 RESULT_PROCESS_PLAINTEXT = {
     "leakcheck": convert_leakcheck_plaintext,
     "snusbase": convert_snusbase_plaintext,
     "dehashed": convert_dehashed_plaintext,
     "google": convert_google_plaintext,
+    "duckduckgo": convert_duckduckgo_plaintext,
 }
 
 
@@ -140,16 +148,19 @@ async def maincore():
         del modules["leaks"]
     module_funcs = list(chain.from_iterable(modules.values()))
     for func in module_funcs:
+        if func.__name__ == "google":
+            continue
         with contextlib.suppress(KeyError):
             func = partial(func, **keys[func.__name__])
-        results = await asyncio.create_task(func(args.email))
+        func_name = func.func.__name__ if isinstance(func, partial) else func.__name__
+        try:
+            results = await asyncio.create_task(func(args.email))
+        except:
+            print(f"- {Fore.RED} Exception during {func_name} module.")
+            continue
         if not results:
             continue
-        if (
-            func_name := func.func.__name__
-            if isinstance(func, partial)
-            else func.__name__
-        ) in RESULT_PROCESS_PLAINTEXT:
+        if (func_name) in RESULT_PROCESS_PLAINTEXT:
             if plaintext := RESULT_PROCESS_PLAINTEXT[func_name](results):
                 print("=" * 45)
                 print(f"-| MODULE: {func_name.upper()} |-")
